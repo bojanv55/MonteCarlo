@@ -13,9 +13,8 @@ public class BoardState {
     private int whichPlayerWonRound;
     private static int homeSum;
     private static int awaySum;
-    private static final Random randomCard = new Random();
-    private static final Random randomMove = new Random();
-    private static final Random randomRemover = new Random();
+    private final Random randomCard = new Random();
+    private final Random randomMove = new Random();
 
     public BoardState(List<Card> homeCards, List<Card> awayCards) {
         this.homeCards = homeCards;
@@ -162,7 +161,7 @@ public class BoardState {
         return (score.roundsHomeWon() > score.roundsAwayWon()) ? 1 : ((score.roundsHomeWon() < score.roundsAwayWon()) ? -1 : 0);
     }
 
-    private static Card.Move getRandomMove(){
+    private Card.Move getRandomMove(){
         return Card.Move.values()[randomMove.nextInt(3)];   //which move we do with card - attack, control or defense
     }
 
@@ -212,6 +211,9 @@ public class BoardState {
                 var possibleSel = awayRemaining.stream().filter(x -> ri.awayTM().getCard().getType() == null || x.getType() == ri.awayTM().getCard().getType()).toList();
                 Move homeMov = ri.homeTM();
                 Move awayMov = new Move(selectAwayCard(possibleSel), homeMov.getMove().response());
+
+                ri.adjustVisits(homeMov, awayMov);
+
                 scr = calculateScore(homeMov, awayMov, scr);
                 awayRemaining.remove(awayMov.getCard());    //remove used card
 

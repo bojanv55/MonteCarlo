@@ -2,6 +2,7 @@ package org.example;
 
 import org.example.game.BoardState;
 import org.example.game.Card;
+import org.example.game.GameCoordinator;
 import org.example.game.Move;
 import org.example.mcts.MCTS;
 import org.example.mcts.TreeNode;
@@ -54,11 +55,6 @@ public class GameRunner {
 
         Scanner s = new Scanner(System.in);
 
-        Set<Card> p1Played = new HashSet<>();
-        Set<Card> p2Played = new HashSet<>();
-
-        var boardState = new BoardState(homeCards, awayCards);
-        TreeNode.MoveWithStats bestMoveWithStats;
 
 
         int nextPlay;
@@ -67,9 +63,7 @@ public class GameRunner {
         }while (!Set.of(1,2).contains(nextPlay = s.nextInt()));
 
 
-        /*while ((bestMoveWithStats = MCTS.findBestMove(boardState)) != null){
-
-        }*/
+        var gameCoordinator = new GameCoordinator(new BoardState(homeCards, awayCards), nextPlay);
 
         do{
             //System.out.println("POSSIBLE WIN ");
@@ -77,12 +71,9 @@ public class GameRunner {
             //System.out.println("SCORE");
             //System.out.printf("%s : %s%n", boardState.getRoundsHomeWon(), boardState.getRoundsAwayWon());
 
-            if(nextPlay==1){
-                //first player plays
-                bestMoveWithStats = MCTS.findBestMove(boardState, null);
+            Move awayMove = null;
 
-            }
-            else{
+            if(nextPlay!=1){
                 //second player plays
                 String cardTy = null;
                 String moveTy = null;
@@ -95,10 +86,10 @@ public class GameRunner {
                     moveTy = s.next();
                 }while (!Set.of("A","C","D").contains(moveTy));
 
-                Move awayMove = new Move(Card.getOfType(cardTy), Card.Move.getOfType(moveTy));
-
-                bestMoveWithStats = MCTS.findBestMove(boardState, awayMove);
+                awayMove = new Move(Card.getOfType(cardTy), Card.Move.getOfType(moveTy));
             }
+
+            var bestMoveWithStats = gameCoordinator.findBestMove(awayMove);
 
 
             Move bestMove = bestMoveWithStats.move();
@@ -116,25 +107,17 @@ public class GameRunner {
             }while (!awayCards.stream().map(Card::getId).collect(Collectors.toSet()).contains(p2Id));
 
             final String p2IdSel = p2Id;
-            p1Played.add(bestMove.getCard());
             Card p2Card = awayCards.stream().filter(c -> c.getId().equals(p2IdSel)).findFirst().get();
-            p2Played.add(p2Card);
 
             Move p2Move = new Move(p2Card, bestMove.getMove().response());
 
             //new state
-            boardState = new BoardState(boardState, bestMove, p2Move, boardState.getAwayCards(), boardState.getScore());
+            nextPlay = gameCoordinator.transitionToNextState(bestMove, p2Move);
 
-            if(nextPlay==1 && boardState.getWhichPlayerWonRound()==-1){
-                nextPlay = 2;
-            }
-            else if(nextPlay==2 && boardState.getWhichPlayerWonRound()==1){
-                nextPlay = 1;
-            }
 
-            System.out.printf("Score = %s : %s%n", boardState.getScore().roundsHomeWon(), boardState.getScore().roundsAwayWon());
+            System.out.printf("Score = %s : %s%n", gameCoordinator.roundsHomeWon(), gameCoordinator.roundsAwayWon());
 
-        }while (!boardState.isGameOver());
+        }while (gameCoordinator.isNotGameOver());
 
     }
 }
