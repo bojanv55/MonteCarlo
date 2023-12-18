@@ -6,7 +6,7 @@ import java.util.*;
 public class BoardState {
     private List<Card> homeCards = new ArrayList<>();
     private List<Card> awayCards = new ArrayList<>();
-    private Deque<Move> roundToHomePlayedMove = new LinkedList<>();
+    private Deque<TreeMove> roundToHomePlayedMove = new LinkedList<>();
     private Score score = new Score(0,0);
     private Move homeMove;
     private Move awayMove;
@@ -34,11 +34,11 @@ public class BoardState {
         this.awayCards = prevState.awayCards;
 
         this.roundToHomePlayedMove = new LinkedList<>(prevState.roundToHomePlayedMove);
-        this.roundToHomePlayedMove.addLast(homeMove);
+        this.roundToHomePlayedMove.addLast(new TreeMove(homeMove, awayMove));
 
         this.score = prevState.getScore();
-        this.homeMove = homeMove;
-        this.awayMove = awayMove;
+        this.homeMove = null;
+        this.awayMove = null;
     }
 
     public Score getScore() {
@@ -51,6 +51,11 @@ public class BoardState {
 
     public int getWhichPlayerWonRound() {
         return whichPlayerWonRound;
+    }
+
+
+    public Move getFirstHome(){
+        return this.roundToHomePlayedMove.getFirst().homeTM();
     }
 
     public BoardState(BoardState prevState, Move homeMove, Move awayMove, List<Card> awayRemaining, Score score){
@@ -138,7 +143,7 @@ public class BoardState {
     }
 
     public int remainingCardsPerPlayer(){
-        return homeCards.size();    //can be awayCards also; home and away has same number of cards
+        return Math.max(homeCards.size(), awayCards.size());    //can be awayCards also; home and away has same number of cards
     }
 
     public boolean isGameOver(){
@@ -169,7 +174,7 @@ public class BoardState {
         return homeCards.get(randomCard.nextInt(homeCards.size()));
     }
 
-    public List<BoardState> getAllPossibleNextStates(Move awayMove){
+    public List<BoardState> getAllPossibleNextStates(Move awayMove, boolean isExpand){
         List<BoardState> result = new ArrayList<>();
         for(Card homeCard : homeCards){
             if(awayMove==null) {    //check all possibilities
@@ -197,48 +202,32 @@ public class BoardState {
     public BoardState randomPlay() {
 
         Score scr = this.score;
+
         List<Card> awayRemaining = new ArrayList<>(this.awayCards);
 
-        if(!roundToHomePlayedMove.isEmpty() && this.awayMove==null){
-            //means we are in the leaf node, so adjust away cards to match randomly current awayTypeToNumberOfPlayedCards MAP
-            //before starting the simulation expansion
-            //we will adjust number of away remaining cards, by playing random moves from away matching already played roundToHomePlayedMove
-
-            Set<Integer> removeIndexes = new HashSet<>();
-
-            int removeTotalElements = roundToHomePlayedMove.size();
-            while (removeIndexes.size() < removeTotalElements) {
-                int randomValue = randomRemover.nextInt(awayRemaining.size()); //we can remove any of the away cards, but not twice
-                removeIndexes.add(randomValue);
-            }
-
-            var remIndIter = removeIndexes.iterator();
+        if(!roundToHomePlayedMove.isEmpty()){
             var roundIter = roundToHomePlayedMove.iterator();
-            while (remIndIter.hasNext() && roundIter.hasNext()){
-                //go move by move and simulate some game up to this point
-                int remIdx = remIndIter.next();
-                Move homeMov = roundIter.next();
-                Move awayMov = new Move(awayRemaining.get(remIdx), homeMov.getMove().response());
+            while (roundIter.hasNext()) {
+                var ri = roundIter.next();
+                var possibleSel = awayRemaining.stream().filter(x -> ri.awayTM().getCard().getType() == null || x.getType() == ri.awayTM().getCard().getType()).toList();
+                Move homeMov = ri.homeTM();
+                Move awayMov = new Move(selectAwayCard(possibleSel), homeMov.getMove().response());
                 scr = calculateScore(homeMov, awayMov, scr);
-            }
+                awayRemaining.remove(awayMov.getCard());    //remove used card
 
-            List<Card> awayRemainingNew = new ArrayList<>(this.awayCards);
-            for(int remIdx : removeIndexes){
-                awayRemainingNew.remove(awayRemaining.get(remIdx));
+                if(awayRemaining.isEmpty()){
+                    //final round
+                    return new BoardState(this, homeMov, awayMov, awayRemaining, scr);
+                }
             }
-            awayRemaining = awayRemainingNew;
         }
 
-        List<Card> awayPossibleMoves = new ArrayList<>(awayRemaining);
-        if(awayMove!=null && awayMove.getCard().isUnknown() && awayMove.getCard().getType()!=null){
-            awayPossibleMoves = awayRemaining.stream().filter(x -> x.getType()==awayMove.getCard().getType()).toList();
-        }
 
         //Card homeCard = selectHomeCard();
-        Card awayCard = selectAwayCard(awayPossibleMoves);
-        Card.Move homeCardMoveType = getRandomMove();
-        Move homeMove = this.homeMove == null ? new Move(selectHomeCard(), getRandomMove()) : this.homeMove;
-        Move awayMove = this.awayMove == null ? new Move(selectAwayCard(awayPossibleMoves), homeMove.getMove().response()) : new Move(awayCard, homeMove.getMove().response());
+        Card awayKard = selectAwayCard(awayRemaining);
+        //Card.Move homeCardMoveType = getRandomMove();
+        Move homeMove = new Move(selectHomeCard(), getRandomMove());
+        Move awayMove = new Move(awayKard, homeMove.getMove().response());
         return new BoardState(this, homeMove, awayMove, awayRemaining, scr);
     }
 }

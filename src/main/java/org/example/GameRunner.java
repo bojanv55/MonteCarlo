@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 public class GameRunner {
     public static void main(String[] args) {
 
+
         List<Card> homeCards = List.of(
                 new Card("ARS8", Card.Type.MIDFIELDER, 62,88,77),
                 new Card("LIV13", Card.Type.MIDFIELDER, 72,86,76),
@@ -30,6 +31,26 @@ public class GameRunner {
                 new Card("NEW2", Card.Type.DEFENDER, 69,65,83),
                 new Card("MIL6", Card.Type.FORWARD, 86,76,72)
         );
+
+
+        /*
+        List<Card> homeCards = List.of(
+                new Card("LAZ2", Card.Type.DEFENDER, 63,73,82)
+        );
+
+        List<Card> awayCards = List.of(
+                new Card("INT9", Card.Type.MIDFIELDER, 60,82,72)
+        );
+
+        List<Card> homeCards = List.of(
+                new Card("LIV13", Card.Type.MIDFIELDER, 72,86,76),
+                new Card("BEN16", Card.Type.FORWARD, 82,74,59)
+        );
+
+        List<Card> awayCards = List.of(
+                new Card("INT9", Card.Type.MIDFIELDER, 60,82,72),
+                new Card("BAR10", Card.Type.MIDFIELDER, 71,88,68)
+        );*/
 
         Scanner s = new Scanner(System.in);
 
@@ -82,7 +103,6 @@ public class GameRunner {
 
             Move bestMove = bestMoveWithStats.move();
 
-            System.out.printf("Score = %s : %s%n", boardState.getScore().roundsHomeWon(), boardState.getScore().roundsAwayWon());
             System.out.println("PLAY ");
             System.out.println(bestMove.getCard().getId());
             System.out.println(bestMove.getMove());
@@ -111,6 +131,8 @@ public class GameRunner {
             else if(nextPlay==2 && boardState.getWhichPlayerWonRound()==1){
                 nextPlay = 1;
             }
+
+            System.out.printf("Score = %s : %s%n", boardState.getScore().roundsHomeWon(), boardState.getScore().roundsAwayWon());
 
         }while (!boardState.isGameOver());
 

@@ -65,7 +65,7 @@ public class TreeNode {
 
     public void expand(Move awayMove) {
         //populate this with all possible children
-        List<BoardState> possibleStates = boardState.getAllPossibleNextStates(awayMove);
+        List<BoardState> possibleStates = boardState.getAllPossibleNextStates(awayMove, true);
 
         //copy this to children here
         possibleStates.forEach(state -> children.add(new TreeNode(state, this)));
@@ -82,6 +82,7 @@ public class TreeNode {
     public BoardState getBoardState() {
         return boardState;
     }
+
 
     public static <K, V extends Comparable<V>> K getKeyWithMaxValue(Map<K, V> map) {
         // Check if the map is not empty
@@ -129,13 +130,13 @@ public class TreeNode {
             return null;
         }
         Map<Move, Integer> mapVis = this.children.stream()
-                .collect(Collectors.groupingBy(c -> c.getBoardState().getHomeMove(), Collectors.summingInt(TreeNode::getVisits)));
+                .collect(Collectors.groupingBy(c -> c.getBoardState().getFirstHome(), Collectors.summingInt(TreeNode::getVisits)));
         Map<Move, Integer> mapWin = this.children.stream()
-                .collect(Collectors.groupingBy(c -> c.getBoardState().getHomeMove(), Collectors.summingInt(TreeNode::getWins)));
+                .collect(Collectors.groupingBy(c -> c.getBoardState().getFirstHome(), Collectors.summingInt(TreeNode::getWins)));
         Map<Move, Integer> mapDraw = this.children.stream()
-                .collect(Collectors.groupingBy(c -> c.getBoardState().getHomeMove(), Collectors.summingInt(TreeNode::getDraws)));
+                .collect(Collectors.groupingBy(c -> c.getBoardState().getFirstHome(), Collectors.summingInt(TreeNode::getDraws)));
         Map<Move, Integer> mapLoss = this.children.stream()
-                .collect(Collectors.groupingBy(c -> c.getBoardState().getHomeMove(), Collectors.summingInt(TreeNode::getLoses)));
+                .collect(Collectors.groupingBy(c -> c.getBoardState().getFirstHome(), Collectors.summingInt(TreeNode::getLoses)));
         Move mv = getKeyWithMaxValue(mapVis);
         return new MoveWithStats(mv, mapWin.get(mv), mapDraw.get(mv), mapLoss.get(mv));
     }

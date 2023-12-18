@@ -9,7 +9,7 @@ public class MCTS {
 
 
     private static TreeNode select(TreeNode node){
-        while (!node.getChildren().isEmpty()){
+        while (!node.getChildren().isEmpty()){  //go to children below in the tree
             node = uctSelect(node);
         }
         return node;
