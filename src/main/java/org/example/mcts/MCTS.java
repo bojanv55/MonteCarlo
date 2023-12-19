@@ -16,12 +16,12 @@ public class MCTS {
     }
 
     private static TreeNode uctSelect(TreeNode node) {
-        double maxUCT = Double.MIN_VALUE;
+        double maxUCT = Double.NEGATIVE_INFINITY;
         TreeNode selectedChild = null;
 
         for(TreeNode childNode : node.getChildren()){
             //if never visited, UCT value is MAX_VALUE
-            double uctValue = (childNode.getVisits() == 0) ? Double.MAX_VALUE : ((double)(childNode.getWinsRatio() * childNode.getHomePlaysRatio())/childNode.getVisits()
+            double uctValue = (childNode.getVisits() == 0) ? Double.MAX_VALUE : ((double)((childNode.getWinsRatio()) + (childNode.getHomePlaysRatio()))/childNode.getVisits()
                     + EXPLORATION_PARAMETER * Math.sqrt(Math.log(node.getVisits()) / childNode.getVisits()));
             if(uctValue > maxUCT){
                 maxUCT = uctValue;
