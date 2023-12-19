@@ -97,7 +97,7 @@ public class GameRunner {
             System.out.println("PLAY ");
             System.out.println(bestMove.getCard().getId());
             System.out.println(bestMove.getMove());
-            System.out.printf("Win prob: %.5f, Draw prob: %.5f, Loss prob: %.5f%n", bestMoveWithStats.winProb(), bestMoveWithStats.drawProb(), bestMoveWithStats.lossProb());
+            System.out.printf("Win prob: %.5f, Draw prob: %.5f, Loss prob: %.5f, Minmax prob: %.5f%n;", bestMoveWithStats.winProb(), bestMoveWithStats.drawProb(), bestMoveWithStats.lossProb(), bestMoveWithStats.winProbD());
 
             String p2Id;
 

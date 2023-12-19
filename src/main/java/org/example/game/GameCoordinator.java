@@ -33,14 +33,20 @@ public class GameCoordinator {
                     Collectors.groupingBy(x -> x.getBoardState().getHomeMove(), Collectors.averagingDouble(x -> x.getMinmaxD())));
             Move homeplay = TreeNode.getKeyWithMaxValue(play);
 
-            return new TreeNode.MoveWithStats(homeplay, 0,0,0);
+            var maxval = rootNode.getChildren().stream().collect(
+                    Collectors.groupingBy(x -> x.getBoardState().getHomeMove(), Collectors.averagingDouble(x -> x.getMinmaxD()))).values().stream().max(Comparator.comparingDouble(x -> x)).get();
+
+            return new TreeNode.MoveWithStats(homeplay, 0,0,0, maxval);
         }
         else{
             var play = rootNode.getChildren().stream().collect(
                     Collectors.groupingBy(x -> x.getBoardState().getHomeMove(), Collectors.averagingDouble(x -> x.getMinmaxD())));
             Move homeplay = TreeNode.getKeyWithMaxValue(play);
 
-            return new TreeNode.MoveWithStats(homeplay, 0,0,0);
+            var maxval = rootNode.getChildren().stream().collect(
+                    Collectors.groupingBy(x -> x.getBoardState().getHomeMove(), Collectors.averagingDouble(x -> x.getMinmaxD()))).values().stream().max(Comparator.comparingDouble(x -> x)).get();
+
+            return new TreeNode.MoveWithStats(homeplay, 0,0,0, maxval);
         }
     }
 

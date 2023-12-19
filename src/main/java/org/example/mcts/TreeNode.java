@@ -233,7 +233,7 @@ public class TreeNode {
     }
 
 
-    public record MoveWithStats(Move move, int wins, int draws, int losses){
+    public record MoveWithStats(Move move, int wins, int draws, int losses, double winProbD){
         public double winProb(){
             return (double)wins / (wins+draws+losses);
         }
@@ -260,6 +260,6 @@ public class TreeNode {
         Map<Move, Integer> mapLoss = this.children.stream()
                 .collect(Collectors.groupingBy(c -> c.getBoardState().getFirstHome(), Collectors.summingInt(TreeNode::getLoses)));
         Move mv = getKeyWithMaxValue(mapVis);
-        return new MoveWithStats(mv, mapWin.get(mv), mapDraw.get(mv), mapLoss.get(mv));
+        return new MoveWithStats(mv, mapWin.get(mv), mapDraw.get(mv), mapLoss.get(mv), 0.0);
     }
 }
