@@ -10,6 +10,7 @@ public class BoardState {
     private Score score = new Score(0,0);
     private Move homeMove;
     private Move awayMove;
+    private int homeVsAwayMoves;
     private int whichPlayerWonRound;
     private static int homeSum;
     private static int awaySum;
@@ -52,6 +53,9 @@ public class BoardState {
         return whichPlayerWonRound;
     }
 
+    public int getHomeVsAwayMoves() {
+        return homeVsAwayMoves;
+    }
 
     public Move getFirstHome(){
         return this.roundToHomePlayedMove.getFirst().homeTM();
@@ -70,6 +74,8 @@ public class BoardState {
 
         var playerWonScor = calculateScore(homeMove, awayMove, new Score(0,0));
         whichPlayerWonRound = roundResult(playerWonScor);
+
+        this.homeVsAwayMoves = prevState.homeVsAwayMoves + whichPlayerWonRound;
 
         this.score = calculateScore(homeMove, awayMove, score);
     }

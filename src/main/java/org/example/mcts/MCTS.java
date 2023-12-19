@@ -21,7 +21,7 @@ public class MCTS {
 
         for(TreeNode childNode : node.getChildren()){
             //if never visited, UCT value is MAX_VALUE
-            double uctValue = (childNode.getVisits() == 0) ? Double.MAX_VALUE : ((double)childNode.getWins()/childNode.getVisits()
+            double uctValue = (childNode.getVisits() == 0) ? Double.MAX_VALUE : ((double)(childNode.getWinsRatio() * childNode.getHomePlaysRatio())/childNode.getVisits()
                     + EXPLORATION_PARAMETER * Math.sqrt(Math.log(node.getVisits()) / childNode.getVisits()));
             if(uctValue > maxUCT){
                 maxUCT = uctValue;
@@ -53,7 +53,7 @@ public class MCTS {
             //this node, but just play one possible game out of many from this node downwards, and only for that game we update
             //the score of that game at this node (backpropagate) so that we know that some game that we played actually
             //resulted in that. but there may be many more games that we can play from this node downwards.
-            int result = simulate(nodeToExplore);
+            ResultState result = simulate(nodeToExplore);
 
             backpropagate(nodeToExplore, result);
         }
@@ -61,7 +61,7 @@ public class MCTS {
         return root.getMoveWithMaxScore();
     }
 
-    private static void backpropagate(TreeNode selectedNode, int result) {
+    private static void backpropagate(TreeNode selectedNode, ResultState result) {
         while (selectedNode != null) {
             selectedNode.incrementVisits();
             selectedNode.updateResult(result);
@@ -69,11 +69,13 @@ public class MCTS {
         }
     }
 
-    private static int simulate(TreeNode selectedNode) {
+    public record ResultState(int result, int ratioOfHomePLays){}
+
+    private static ResultState simulate(TreeNode selectedNode) {
         BoardState boardState = selectedNode.getBoardState();
         while(!boardState.isGameOver()){
             boardState = boardState.randomPlay();
         }
-        return boardState.result();    //one possible simulation is over, so return whatever is the result
+        return new ResultState(boardState.result(), boardState.getHomeVsAwayMoves());    //one possible simulation is over, so return whatever is the result
     }
 }

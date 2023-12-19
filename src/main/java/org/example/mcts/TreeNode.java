@@ -10,6 +10,8 @@ public class TreeNode {
     private BoardState boardState;
     private int visits;
     private int wins;
+    private double winsRatio;
+    private double homePlaysRatio;
     private int draws;
     private int loses;
     private List<TreeNode> children = new ArrayList<>();
@@ -45,8 +47,8 @@ public class TreeNode {
         this.visits++;
     }
 
-    public void updateResult(int result) {
-        switch (result){
+    public void updateResult(MCTS.ResultState state) {
+        switch (state.result()){
             case -1:
                 this.loses++;
                 break;
@@ -56,6 +58,15 @@ public class TreeNode {
             case 1:
                 this.wins++;
                 break;
+        }
+
+        if(!children.isEmpty()){
+            this.winsRatio = children.stream().mapToDouble(x -> x.visits==0 ? 0 : (double)x.wins/x.visits).average().getAsDouble();
+            this.homePlaysRatio = children.stream().mapToDouble(x -> x.visits==0 ? 0 : x.homePlaysRatio).sum();
+        }
+        else{
+            this.winsRatio = this.wins;
+            this.homePlaysRatio = state.ratioOfHomePLays();
         }
     }
 
@@ -83,6 +94,9 @@ public class TreeNode {
         return boardState;
     }
 
+    public double getHomePlaysRatio() {
+        return homePlaysRatio;
+    }
 
     public static <K, V extends Comparable<V>> K getKeyWithMaxValue(Map<K, V> map) {
         // Check if the map is not empty
@@ -110,6 +124,12 @@ public class TreeNode {
         // Return the key with the maximum value
         return keyWithMaxValue;
     }
+
+    public double getWinsRatio() {
+        return this.winsRatio;
+    }
+
+
 
     public record MoveWithStats(Move move, int wins, int draws, int losses){
         public double winProb(){
