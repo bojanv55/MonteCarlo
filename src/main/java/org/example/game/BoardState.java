@@ -1,6 +1,5 @@
 package org.example.game;
 
-import javax.security.auth.kerberos.KerberosTicket;
 import java.util.*;
 
 public class BoardState {
@@ -11,7 +10,12 @@ public class BoardState {
     private Move homeMove;
     private Move awayMove;
     private int homeVsAwayMoves;
-    private int whichPlayerWonRound;
+    private Integer whichPlayerWonRound;
+    private Integer whichPlayerWonPreviousRound;
+
+    private Integer whichPlayerPlayedPreviousRound;
+    private Integer whichPlayerPlaysRound;
+
     private static int homeSum;
     private static int awaySum;
     private final Random randomCard = new Random();
@@ -23,6 +27,10 @@ public class BoardState {
 
         homeSum = homeCards.stream().mapToInt(Card::sumOfValues).sum();
         awaySum = awayCards.stream().mapToInt(Card::sumOfValues).sum();
+    }
+
+    public boolean awayPlays(boolean awayPlayed){
+        return this.whichPlayerWonRound==0 ? this.whichPlayerWonPreviousRound==-1 : this.whichPlayerWonRound==-1;
     }
 
     public BoardState(BoardState prevState, Move homeMove, Move awayMove){
@@ -39,6 +47,50 @@ public class BoardState {
         this.score = prevState.getScore();
         this.homeMove = null;
         this.awayMove = null;
+    }
+
+
+
+    public BoardState(BoardState prevState, Move homeMove, Move awayMove, Object smth){
+
+        //if awayMove CardID is null that means that we create Board state for TreeNode expansion.
+        //If it has some Id, that means that we create BoardState for random play
+
+        this.homeCards = prevState.homeCards.stream().filter(c -> !c.equals(homeMove.getCard())).toList();
+        this.awayCards = prevState.awayCards.stream().filter(c -> !c.equals(awayMove.getCard())).toList();
+
+        this.score = calculateScore(homeMove, awayMove, prevState.getScore());
+
+        var playerWonScor = calculateScore(homeMove, awayMove, new Score(0,0));
+        if(prevState.whichPlayerWonRound!=null){
+            whichPlayerWonPreviousRound = prevState.whichPlayerWonRound;
+        }
+        whichPlayerWonRound = roundResult(playerWonScor);
+
+
+        if(prevState.whichPlayerPlayedPreviousRound!=null){
+            whichPlayerPlayedPreviousRound = prevState.whichPlayerPlaysRound;
+        }
+        whichPlayerPlaysRound = whichPlayerWonRound==0 ? whichPlayerPlayedPreviousRound : whichPlayerWonRound;
+
+        this.homeMove = homeMove;
+        this.awayMove = awayMove;
+    }
+
+    public Integer getWhichPlayerPlayedPreviousRound() {
+        return whichPlayerPlayedPreviousRound;
+    }
+
+    public void setWhichPlayerPlayedPreviousRound(Integer whichPlayerPlayedPreviousRound) {
+        this.whichPlayerPlayedPreviousRound = whichPlayerPlayedPreviousRound;
+    }
+
+    public Integer getWhichPlayerPlaysRound() {
+        return whichPlayerPlaysRound;
+    }
+
+    public void setWhichPlayerPlaysRound(Integer whichPlayerPlaysRound) {
+        this.whichPlayerPlaysRound = whichPlayerPlaysRound;
     }
 
     public Score getScore() {
@@ -73,15 +125,22 @@ public class BoardState {
         this.awayMove = null;
 
         var playerWonScor = calculateScore(homeMove, awayMove, new Score(0,0));
+        if(whichPlayerWonRound!=null){
+            whichPlayerWonPreviousRound = whichPlayerWonRound;
+        }
         whichPlayerWonRound = roundResult(playerWonScor);
 
-        this.homeVsAwayMoves = prevState.homeVsAwayMoves + whichPlayerWonRound;
+        this.homeVsAwayMoves = prevState.homeVsAwayMoves + (whichPlayerWonRound==0? (whichPlayerWonPreviousRound!=null ? whichPlayerWonPreviousRound : 0) : whichPlayerWonRound);
 
         this.score = calculateScore(homeMove, awayMove, score);
     }
 
     public Move getHomeMove() {
         return homeMove;
+    }
+
+    public Move getAwayMove(){
+        return awayMove;
     }
 
     public Score calculateScore(Move homeMove, Move awayMove, Score currentScore){
@@ -145,6 +204,10 @@ public class BoardState {
                 }
         }
         return null;    //shouldnt happen
+    }
+
+    public boolean isAwayMove() {
+        return this.whichPlayerPlaysRound==-1;
     }
 
     public int remainingCardsPerPlayer(){
@@ -237,5 +300,25 @@ public class BoardState {
         Move homeMove = new Move(selectHomeCard(), getRandomMove());
         Move awayMove = new Move(awayKard, homeMove.getMove().response());
         return new BoardState(this, homeMove, awayMove, awayRemaining, scr);
+    }
+
+    public List<BoardState> getAllPossibleNextMinMaxStates(Move awayMove) {
+        List<BoardState> result = new ArrayList<>();
+        for(Card homeCard : homeCards){
+            for(Card awayCard: awayCards.stream().filter(x -> awayMove==null || x.getType()==awayMove.getCard().getType()).toList()){
+                for (Card.Move move : Arrays.stream(Card.Move.values()).filter(x -> awayMove==null || x.response()==awayMove.getMove()).toList()) {
+                    result.add(new BoardState(this, new Move(homeCard, move), new Move(awayCard, move.response()), null));
+                }
+            }
+        }
+        return result;
+    }
+
+    public void setPreviousRoundWinner(int i) {
+        this.whichPlayerWonPreviousRound = i;
+    }
+
+    public void setWinner(int i) {
+        this.whichPlayerWonRound = i;
     }
 }

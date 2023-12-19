@@ -12,6 +12,15 @@ public class TreeNode {
     private int wins;
     private double winsRatio;
     private double homePlaysRatio;
+    private double homeWinCert;
+    private int minmax;
+
+    private double minmaxD;
+
+    private double winprob;
+    private double looseprob;
+    private double drawprob;
+
     private int draws;
     private int loses;
     private List<TreeNode> children = new ArrayList<>();
@@ -125,10 +134,103 @@ public class TreeNode {
         return keyWithMaxValue;
     }
 
+    public static <K, V extends Comparable<V>> K getKeyWithMinValue(Map<K, V> map) {
+        // Check if the map is not empty
+        if (map.isEmpty()) {
+            return null; // or throw an exception, depending on your requirements
+        }
+
+        // Initialize variables to track the key and max value
+        K keyWithMaxValue = null;
+        V maxValue = null;
+
+        // Iterate through the entries of the map
+        for (Map.Entry<K, V> entry : map.entrySet()) {
+            // Get the value of the current entry
+            V value = entry.getValue();
+
+            // Check if the current value is greater than the max value
+            if (maxValue == null || value.compareTo(maxValue) < 0) {
+                // Update the key and max value
+                keyWithMaxValue = entry.getKey();
+                maxValue = value;
+            }
+        }
+
+        // Return the key with the maximum value
+        return keyWithMaxValue;
+    }
+
+    public double getMinmaxD() {
+        return minmaxD;
+    }
+
     public double getWinsRatio() {
         return this.winsRatio;
     }
 
+    public static void backPropagateMinMax(TreeNode treeNode){
+        if(treeNode==null){
+            return;
+        }
+
+        if(treeNode.children.isEmpty()){
+            //leaf node
+            //treeNode.minmax = treeNode.getBoardState().getWhichPlayerWonRound();
+
+            treeNode.minmaxD = treeNode.getBoardState().getWhichPlayerWonRound();
+
+            if(treeNode.getBoardState().getWhichPlayerWonRound()==-1){
+                treeNode.looseprob = 1;
+            }
+            else if(treeNode.getBoardState().getWhichPlayerWonRound()==0){
+                treeNode.drawprob = 1;
+            }
+            else{
+                treeNode.winprob = 1;
+            }
+        }
+        else{
+            //any parent
+            if(treeNode.getBoardState().isAwayMove()){
+                //if any child has -1 we lose the game, otherwise 0 or 1.
+                //treeNode.minmax = treeNode.getChildren().stream().mapToInt(x -> x.minmax).min().getAsInt();
+
+                treeNode.minmaxD = treeNode.getChildren().stream().collect(
+                        Collectors.groupingBy(x -> x.getBoardState().getAwayMove(), Collectors.averagingDouble(x -> x.minmaxD))).values().stream().min(Comparator.comparingDouble(x -> x)).get();
+            }
+            else{
+                //away move
+                //treeNode.minmax = treeNode.getChildren().stream().mapToInt(x -> x.minmax).max().getAsInt();
+
+                treeNode.minmaxD = treeNode.getChildren().stream().collect(
+                        Collectors.groupingBy(x -> x.getBoardState().getHomeMove(), Collectors.averagingDouble(x -> x.minmaxD))).values().stream().max(Comparator.comparingDouble(x -> x)).get();
+            }
+        }
+
+        backPropagateMinMax(treeNode.parent);
+    }
+
+    public void expandMinMax(Move awayMove) {
+
+        if(boardState.isGameOver()){
+            //no need to expand anymore
+
+            backPropagateMinMax(this);
+
+            return;
+        }
+
+        //populate this with all possible children
+        List<BoardState> possibleStates = boardState.getAllPossibleNextMinMaxStates(awayMove);
+
+        //copy this to children here
+        possibleStates.forEach(state -> children.add(new TreeNode(state, this)));
+
+        for(TreeNode child : children){
+            child.expandMinMax(null);   //
+        }
+    }
 
 
     public record MoveWithStats(Move move, int wins, int draws, int losses){

@@ -33,12 +33,18 @@ public class SimulTest {
     @Test
     public void testSim(){
         var gameCoordinator = new GameCoordinator(new BoardState(homeCards, awayCards), 1);
-        gameCoordinator.transitionToNextState(new Move(homeCards.get(0), Card.Move.CONTROL)
-        , new Move(awayCards.get(1), Card.Move.CONTROL));
-        gameCoordinator.transitionToNextState(new Move(homeCards.get(4), Card.Move.DEFENSE)
-                , new Move(awayCards.get(4), Card.Move.ATTACK));
 
-        var bestM = gameCoordinator.findBestMove(new Move(Card.getOfType("D"), Card.Move.getOfType("D")));
+        var moj = gameCoordinator.findBestMinMaxMove(null);
+
+//        gameCoordinator.transitionToNextState(new Move(homeCards.get(0), Card.Move.CONTROL)
+//        , new Move(awayCards.get(1), Card.Move.CONTROL));
+//        gameCoordinator.transitionToNextState(new Move(homeCards.get(4), Card.Move.DEFENSE)
+//                , new Move(awayCards.get(4), Card.Move.ATTACK));
+//
+//
+//        var moj = gameCoordinator.findBestMinMaxMove(new Move(Card.getOfType("D"), Card.Move.getOfType("D")));
+//
+//        var bestM = gameCoordinator.findBestMove(new Move(Card.getOfType("D"), Card.Move.getOfType("D")));
 
         //gameCoordinator.transitionToNextState(new Move(homeCards.get(1), Card.Move.ATTACK)
         //        , new Move(awayCards.get(3), Card.Move.DEFENSE));

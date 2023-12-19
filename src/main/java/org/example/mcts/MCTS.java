@@ -69,6 +69,36 @@ public class MCTS {
         }
     }
 
+    public static TreeNode findBestMinMaxMove(BoardState boardState, Move awayMove) {
+
+        //if awayMove is empty, that means that we play first
+
+        if(awayMove!=null){
+            boardState.setWinner(-1);
+            boardState.setPreviousRoundWinner(-1);
+
+            boardState.setWhichPlayerPlaysRound(-1);
+            boardState.setWhichPlayerPlayedPreviousRound(-1);
+        }
+        else{
+            boardState.setWinner(1);
+            boardState.setPreviousRoundWinner(1);
+
+            boardState.setWhichPlayerPlaysRound(1);
+            boardState.setWhichPlayerPlayedPreviousRound(1);
+        }
+
+        TreeNode root = new TreeNode(boardState, null);
+
+        makeTree(root, awayMove);
+
+        return root;
+    }
+
+    private static void makeTree(TreeNode root, Move awayMove) {
+        root.expandMinMax(awayMove);
+    }
+
     public record ResultState(int result, int ratioOfHomePLays){}
 
     private static ResultState simulate(TreeNode selectedNode) {

@@ -89,7 +89,7 @@ public class GameRunner {
                 awayMove = new Move(Card.getOfType(cardTy), Card.Move.getOfType(moveTy));
             }
 
-            var bestMoveWithStats = gameCoordinator.findBestMove(awayMove);
+            var bestMoveWithStats = gameCoordinator.findBestMinMaxMove(awayMove);
 
 
             Move bestMove = bestMoveWithStats.move();
@@ -112,7 +112,7 @@ public class GameRunner {
             Move p2Move = new Move(p2Card, bestMove.getMove().response());
 
             //new state
-            nextPlay = gameCoordinator.transitionToNextState(bestMove, p2Move);
+            nextPlay = gameCoordinator.transitionToNextMinMaxState(bestMove, p2Move);
 
 
             System.out.printf("Score = %s : %s%n", gameCoordinator.roundsHomeWon(), gameCoordinator.roundsAwayWon());
