@@ -24,8 +24,8 @@ public class TreeNode {
     }
 
     private TreeNode(TreeNode parent, Move ourMove, Move theirMove) {
-        this.ourCards = parent.ourCards.stream().filter(c -> !c.equals(ourMove.getCard())).collect(Collectors.toSet());
-        this.theirCards = parent.theirCards.stream().filter(c -> !c.equals(theirMove.getCard())).collect(Collectors.toSet());
+        this.ourCards = parent.ourCards.stream().filter(c -> !c.equals(ourMove.card())).collect(Collectors.toSet());
+        this.theirCards = parent.theirCards.stream().filter(c -> !c.equals(theirMove.card())).collect(Collectors.toSet());
         this.resultInThisNode = ourMove.compareTo(theirMove);
         this.wePlay = (resultInThisNode==0) ? parent.wePlay : (resultInThisNode == 1);
         this.score = parent.score.calculateNewScore(ourMove, theirMove);

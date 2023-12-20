@@ -44,13 +44,13 @@ public class MinMaxApp {
 
                 do {
                     System.out.print("Their card type? [F]orward, [M]idfielder, [D]efender, [G]oalkeeper, [I]nvincible > ");
-                    cardType = scanner.next();
-                } while (!coordinator.getTheirCards().stream().map(c -> c.getCardType().getShortName())
+                    cardType = scanner.next().toUpperCase();
+                } while (!coordinator.getTheirCards().stream().map(c -> c.cardType().getShortName().toUpperCase())
                         .collect(Collectors.toSet()).contains(cardType));
 
                 do {
                     System.out.print("Their card value type? [A]ttack, [C]ontrol, [D]efense > ");
-                    valueType = scanner.next();
+                    valueType = scanner.next().toUpperCase();
                 } while (!Set.of("A", "C", "D").contains(valueType));
 
                 theirUnknownMove = new UnknownMove(Card.CardType.ofShortName(cardType), Card.ValueType.ofShortName(valueType));
@@ -58,19 +58,19 @@ public class MinMaxApp {
 
             Move bestMove = coordinator.findBestMove(theirUnknownMove);
 
-            System.out.printf("You should play %s with card %s.%n", bestMove.getValueType(), bestMove.getCard().getId());
+            System.out.printf("You should play %s with card %s.%n", bestMove.valueType(), bestMove.card().id());
 
             String theirCardId;
             do {
                 System.out.print("What was the card id that they played with? > ");
                 theirCardId = scanner.next();
-            } while (!coordinator.getTheirCards().stream().map(Card::getId)
-                    .collect(Collectors.toSet()).contains(theirCardId));
+            } while (!coordinator.getTheirCards().stream().map(c -> c.id().toUpperCase())
+                    .collect(Collectors.toSet()).contains(theirCardId.toUpperCase()));
 
             final String theirCardIdFinal = theirCardId;
-            Card theirCard = theirCards.stream().filter(c -> c.getId().equals(theirCardIdFinal)).findFirst().get();
+            Card theirCard = theirCards.stream().filter(c -> c.id().equalsIgnoreCase(theirCardIdFinal)).findFirst().get();
 
-            Move theirKnownMove = new Move(theirCard, bestMove.getValueType().response());
+            Move theirKnownMove = new Move(theirCard, bestMove.valueType().response());
 
             whoPlays = coordinator.transitionToNextState(bestMove, theirKnownMove);
 

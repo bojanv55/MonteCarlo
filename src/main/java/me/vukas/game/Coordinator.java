@@ -17,7 +17,7 @@ public class Coordinator {
     public Move findBestMove(UnknownMove theirMove) {
         if(theirMove != null){
             var movesMap = rootNode.getChildren().stream()
-                    .filter(x -> x.getTheirMove().getCard().getCardType()==theirMove.getCardType() && x.getTheirMove().getValueType() == theirMove.getValueType())
+                    .filter(x -> x.getTheirMove().card().cardType()==theirMove.cardType() && x.getTheirMove().valueType() == theirMove.valueType())
                     .collect(
                             Collectors.groupingBy(TreeNode::getOurMove, Collectors.averagingDouble(TreeNode::getMinMax)));
             return Collections.max(movesMap.entrySet(), Map.Entry.comparingByValue()).getKey();

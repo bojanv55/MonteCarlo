@@ -7,43 +7,10 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class Card {
-    private final String id;
-    private final CardType cardType;
-    private final int attack;
-    private final int control;
-    private final int defense;
+public record Card(String id, CardType cardType, int attack, int control, int defense) {
 
-    public Card(String id, CardType cardType, int attack, int control, int defense) {
-        this.id = id;
-        this.cardType = cardType;
-        this.attack = attack;
-        this.control = control;
-        this.defense = defense;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public CardType getCardType() {
-        return cardType;
-    }
-
-    public int getAttack() {
-        return attack;
-    }
-
-    public int getControl() {
-        return control;
-    }
-
-    public int getDefense() {
-        return defense;
-    }
-
-    public int sumOfValues(){
-        return getAttack() + getControl() + getDefense();
+    public int sumOfValues() {
+        return attack() + control() + defense();
     }
 
     @Override
@@ -83,7 +50,7 @@ public class Card {
             this.shortName = shortName;
         }
 
-        public static CardType ofShortName(String shortName){
+        public static CardType ofShortName(String shortName) {
             return shortNameMap.get(shortName);
         }
     }
@@ -115,7 +82,7 @@ public class Card {
             return reponseMap.get(this);
         }
 
-        public static ValueType ofShortName(String shortName){
+        public static ValueType ofShortName(String shortName) {
             return shortNameMap.get(shortName);
         }
     }

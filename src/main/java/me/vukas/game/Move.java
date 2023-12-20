@@ -1,62 +1,28 @@
 package me.vukas.game;
 
-import java.util.Objects;
-
-public class Move {
-    private final Card card;
-    private final Card.ValueType valueType;
-
-    public Move(Card card, Card.ValueType valueType) {
-        this.card = card;
-        this.valueType = valueType;
-    }
-
-    public Card getCard() {
-        return card;
-    }
-
-    public Card.ValueType getValueType() {
-        return valueType;
-    }
-
+public record Move(Card card, Card.ValueType valueType) {
     //-1 if loss, 0 if draw, 1 if win
-    public int compareTo(Move move){
-        switch (move.getValueType()){
+    public int compareTo(Move move) {
+        switch (move.valueType()) {
             case ATTACK:
-                if(move.getCard().getAttack() < this.getCard().getDefense()){
+                if (move.card().attack() < this.card().defense()) {
                     return 1;
-                }
-                else if(move.getCard().getAttack() > this.getCard().getDefense()){
+                } else if (move.card().attack() > this.card().defense()) {
                     return -1;
                 }
             case CONTROL:
-                if(move.getCard().getControl() < this.getCard().getControl()){
+                if (move.card().control() < this.card().control()) {
                     return 1;
-                }
-                else if(move.getCard().getControl() > this.getCard().getControl()){
+                } else if (move.card().control() > this.card().control()) {
                     return -1;
                 }
             case DEFENSE:
-                if(move.getCard().getDefense() < this.getCard().getAttack()){
+                if (move.card().defense() < this.card().attack()) {
                     return 1;
-                }
-                else if(move.getCard().getDefense() > this.getCard().getAttack()){
+                } else if (move.card().defense() > this.card().attack()) {
                     return -1;
                 }
         }
-        return Integer.compare(this.getCard().sumOfValues(), move.getCard().sumOfValues());
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Move move = (Move) o;
-        return Objects.equals(card, move.card) && valueType == move.valueType;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(card, valueType);
+        return Integer.compare(this.card().sumOfValues(), move.card().sumOfValues());
     }
 }
