@@ -98,12 +98,12 @@ public class TreeNode {
         } else {
             if (treeNode.wePlay) {
                 treeNode.minmax = treeNode.children.stream().collect(
-                                Collectors.groupingBy(x -> x.theirMove, Collectors.averagingDouble(x -> x.minmax)))
-                        .values().stream().min(Comparator.comparingDouble(x -> x)).get();
-            } else {
-                treeNode.minmax = treeNode.children.stream().collect(
                                 Collectors.groupingBy(x -> x.ourMove, Collectors.averagingDouble(x -> x.minmax)))
                         .values().stream().max(Comparator.comparingDouble(x -> x)).get();
+            } else {
+                treeNode.minmax = treeNode.children.stream().collect(
+                                Collectors.groupingBy(x -> x.theirMove, Collectors.averagingDouble(x -> x.minmax)))
+                        .values().stream().min(Comparator.comparingDouble(x -> x)).get();
             }
         }
 
