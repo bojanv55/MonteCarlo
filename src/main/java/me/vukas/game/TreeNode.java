@@ -35,6 +35,10 @@ public class TreeNode {
         this.theirMove = theirMove;
     }
 
+    public Set<Card> getTheirCards() {
+        return theirCards;
+    }
+
     public Set<TreeNode> getChildren() {
         return children;
     }
@@ -43,7 +47,7 @@ public class TreeNode {
         return wePlay;
     }
 
-    public double getMinmax() {
+    public double getMinMax() {
         return minmax;
     }
 
@@ -104,5 +108,9 @@ public class TreeNode {
         }
 
         backpropagation(treeNode.parent);
+    }
+
+    public Score getScore() {
+        return this.score;
     }
 }

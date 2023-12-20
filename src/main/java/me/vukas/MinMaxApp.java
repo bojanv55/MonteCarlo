@@ -3,7 +3,6 @@ package me.vukas;
 import me.vukas.game.*;
 import me.vukas.game.Card.CardType;
 
-import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,7 +26,6 @@ public class MinMaxApp {
         );
 
         Scanner scanner = new Scanner(System.in);
-
         var coordinator = new Coordinator(new TreeNode(ourCards, theirCards));
 
         int whoPlays;
@@ -36,6 +34,8 @@ public class MinMaxApp {
         } while (!Set.of(1, 2).contains(whoPlays = scanner.nextInt()));
 
         do {
+            System.out.printf("Current min-max is %.2f%n", coordinator.getMinMax());
+
             UnknownMove theirUnknownMove = null;
 
             if (!isOurTurn(whoPlays)) {
@@ -45,7 +45,8 @@ public class MinMaxApp {
                 do {
                     System.out.print("Their card type? [F]orward, [M]idfielder, [D]efender, [G]oalkeeper, [I]nvincible > ");
                     cardType = scanner.next();
-                } while (!Set.of("F", "M", "D", "G", "I").contains(cardType));
+                } while (!coordinator.getTheirCards().stream().map(c -> c.getCardType().getShortName())
+                        .collect(Collectors.toSet()).contains(cardType));
 
                 do {
                     System.out.print("Their card value type? [A]ttack, [C]ontrol, [D]efense > ");
@@ -63,7 +64,8 @@ public class MinMaxApp {
             do {
                 System.out.print("What was the card id that they played with? > ");
                 theirCardId = scanner.next();
-            } while (!theirCards.stream().map(Card::getId).collect(Collectors.toSet()).contains(theirCardId));
+            } while (!coordinator.getTheirCards().stream().map(Card::getId)
+                    .collect(Collectors.toSet()).contains(theirCardId));
 
             final String theirCardIdFinal = theirCardId;
             Card theirCard = theirCards.stream().filter(c -> c.getId().equals(theirCardIdFinal)).findFirst().get();
@@ -71,6 +73,9 @@ public class MinMaxApp {
             Move theirKnownMove = new Move(theirCard, bestMove.getValueType().response());
 
             whoPlays = coordinator.transitionToNextState(bestMove, theirKnownMove);
+
+            Score currentScore = coordinator.getScore();
+            System.out.printf("Current score is %d : %d%n%n", currentScore.ourScore(), currentScore.theirScore());
         } while (coordinator.isNotGameOver());
     }
 

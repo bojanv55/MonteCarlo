@@ -75,6 +75,10 @@ public class Card {
 
         private final String shortName;
 
+        public String getShortName() {
+            return shortName;
+        }
+
         CardType(String shortName) {
             this.shortName = shortName;
         }
