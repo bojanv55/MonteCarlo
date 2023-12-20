@@ -19,18 +19,28 @@ public class GameRunner {
 
         List<Card> homeCards = List.of(
                 new Card("ARS8", Card.Type.MIDFIELDER, 62,88,77),
-                new Card("LIV13", Card.Type.MIDFIELDER, 72,86,76),
-                new Card("LAZ2", Card.Type.DEFENDER, 63,73,82),
-                new Card("BEN16", Card.Type.FORWARD, 82,74,59),
-                new Card("NEW1", Card.Type.GOALKEEPER, 66,65,82)
+//                new Card("LIV13", Card.Type.MIDFIELDER, 72,86,76),
+//                new Card("LAZ2", Card.Type.DEFENDER, 63,73,82),
+//                new Card("BEN16", Card.Type.FORWARD, 82,74,59),
+//                new Card("NEW1", Card.Type.GOALKEEPER, 66,65,82),
+
+                new Card("EIN2", Card.Type.DEFENDER, 65,65,77),
+                new Card("MAC6", Card.Type.MIDFIELDER, 80,88,70),
+                new Card("LAZ5", Card.Type.DEFENDER, 61,76,85),
+                new Card("RAF", Card.Type.FORWARD, 98,96,96)
         );
 
         List<Card> awayCards = List.of(
-                new Card("PSG17", Card.Type.FORWARD, 81,69,65),
-                new Card("INT9", Card.Type.MIDFIELDER, 60,82,72),
+                //new Card("PSG17", Card.Type.FORWARD, 81,69,65),
+                //new Card("INT9", Card.Type.MIDFIELDER, 60,82,72),
                 new Card("BAR10", Card.Type.MIDFIELDER, 71,88,68),
-                new Card("NEW2", Card.Type.DEFENDER, 69,65,83),
-                new Card("MIL6", Card.Type.FORWARD, 86,76,72)
+                //new Card("NEW2", Card.Type.DEFENDER, 69,65,83),
+                //new Card("MIL6", Card.Type.FORWARD, 86,76,72),
+
+                new Card("RIV17", Card.Type.FORWARD, 76,67,63),
+                new Card("RMA6", Card.Type.FORWARD, 89,79,69),
+                new Card("ATM18", Card.Type.FORWARD, 83,68,66),
+                new Card("GOL35", Card.Type.FORWARD, 100,97,98)
         );
 
 
