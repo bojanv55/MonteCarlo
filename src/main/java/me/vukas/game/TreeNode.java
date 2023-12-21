@@ -11,7 +11,7 @@ public class TreeNode {
     private Move theirMove;
     private boolean wePlay = true;
     private Score score;
-    private int minmax;
+    private double minmax;
     private int resultInThisNode; //-1 theirWin, 0 draw, 1 ourWin
     private Set<TreeNode> parents = new HashSet<>();
     private Set<TreeNode> children = new HashSet<>();
@@ -36,9 +36,9 @@ public class TreeNode {
     }
 
     static class ChildrenStats{
-        int currentExtreme;
-        int currentMin = 1;
-        int currentMax = -1;
+        double currentExtreme;
+        double currentMin = 1;
+        double currentMax = -1;
         int summedElements;
         int remainingElements;
 
@@ -46,7 +46,7 @@ public class TreeNode {
             this.remainingElements = remainingElements;
         }
 
-        public void updateMinExtreme(int extreme){
+        public void updateMinExtreme(double extreme){
             summedElements++;
             remainingElements--;
             this.currentExtreme += extreme;
@@ -54,7 +54,7 @@ public class TreeNode {
             this.currentMax = Math.max(extreme, this.currentMax);
         }
 
-        public void updateMaxExtreme(int extreme){
+        public void updateMaxExtreme(double extreme){
             summedElements++;
             remainingElements--;
             this.currentExtreme += extreme;
@@ -62,19 +62,23 @@ public class TreeNode {
             this.currentMax = Math.max(extreme, this.currentMax);
         }
 
-        public OptionalInt getAverage(){
+        public OptionalDouble getAverage(){
             if(remainingElements!=0 || !(Math.abs(currentExtreme/summedElements)==1)){
-                return OptionalInt.empty();
+                return OptionalDouble.empty();
             }
-            return OptionalInt.of(currentExtreme);
+            return OptionalDouble.of(currentExtreme);
         }
 
-        public int getCurrentMin() {
-            return currentMin;
+        public double getCurrentExtreme() {
+            return currentExtreme;
         }
 
-        public int getCurrentMax() {
-            return currentMax;
+        public double getCurrentMin() {
+            return (double)currentMin/summedElements;
+        }
+
+        public double getCurrentMax() {
+            return (double)currentMax/summedElements;
         }
     }
 
@@ -135,7 +139,7 @@ public class TreeNode {
         alreadyCalculatedPositions.putIfAbsent(new RemainingCards(child.ourCards, child.theirCards, child.wePlay, child.resultInThisNode, child.score.diff()), child);
     }
 
-    public int expand() {
+    public double expand() {
 
         if(ourMove!=null && ourMove.card().id().equals("MAC6") && ourMove.valueType().equals(Card.ValueType.ATTACK)
                 && theirMove.card().id().equals("PSG17") && theirMove.valueType().equals(Card.ValueType.DEFENSE)){
@@ -174,13 +178,13 @@ public class TreeNode {
         generateAllPossibleChildren();
 
         for(TreeNode child : this.children){
-            int averageResultFromChild = child.expand();
+            double averageResultFromChild = child.expand();
 
             if (this.wePlay) {
                 ChildrenStats stats = this.childrenStatsByOurMove.get(child.ourMove);
                 stats.updateMaxExtreme(averageResultFromChild);
 
-                if(stats.getAverage().isPresent() && stats.getAverage().getAsInt()==1){
+                if(stats.getAverage().isPresent() && stats.getAverage().getAsDouble()==1.0){
                     //no more need to check other children
                     this.minmax = 1;
                     saveHistory(child);
@@ -191,7 +195,7 @@ public class TreeNode {
                 ChildrenStats stats2 = this.childrenStatsByTheirMove.get(child.theirMove);
                 stats2.updateMinExtreme(averageResultFromChild);
 
-                if(stats2.getAverage().isPresent() && stats2.getAverage().getAsInt()==-1){
+                if(stats2.getAverage().isPresent() && stats2.getAverage().getAsDouble()==-1.0){
                     //no more need to check other children
                     this.minmax = -1;
                     saveHistory(child);
