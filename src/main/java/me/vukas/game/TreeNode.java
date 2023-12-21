@@ -6,18 +6,39 @@ import java.util.stream.Collectors;
 public class TreeNode {
     private final Set<Card> ourCards;
     private final Set<Card> theirCards;
+    private final int remainingCardsPerPlayer;
     private Move ourMove;
     private Move theirMove;
     private boolean wePlay = true;
-    private final Score score;
-    private double minmax;
+    private Score score;
+    private int minmax;
     private int resultInThisNode; //-1 theirWin, 0 draw, 1 ourWin
+    private Set<TreeNode> parents = new HashSet<>();
     private Set<TreeNode> children = new HashSet<>();
     private Map<Move, ChildrenStats> childrenStatsByOurMove = new HashMap<>();
     private Map<Move, ChildrenStats> childrenStatsByTheirMove = new HashMap<>();
 
+    private static final Map<RemainingCards, TreeNode> alreadyCalculatedPositions = new HashMap<>();
+
+    record RemainingCards(Set<Card> ourCards, Set<Card> theirCards, boolean wePlay, int resultInThisNode, int scoreDiff){
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            RemainingCards that = (RemainingCards) o;
+            return wePlay == that.wePlay && resultInThisNode == that.resultInThisNode && scoreDiff == that.scoreDiff && Objects.equals(ourCards, that.ourCards) && Objects.equals(theirCards, that.theirCards);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(ourCards, theirCards, wePlay, resultInThisNode, scoreDiff);
+        }
+    }
+
     static class ChildrenStats{
-        double currentSum;
+        int currentExtreme;
+        int currentMin = 1;
+        int currentMax = -1;
         int summedElements;
         int remainingElements;
 
@@ -25,32 +46,58 @@ public class TreeNode {
             this.remainingElements = remainingElements;
         }
 
-        public void updateSum(double averageResultFromChild){
+        public void updateMinExtreme(int extreme){
             summedElements++;
             remainingElements--;
-            currentSum += averageResultFromChild;
+            this.currentExtreme += extreme;
+            this.currentMin = Math.min(extreme, this.currentMin);
+            this.currentMax = Math.max(extreme, this.currentMax);
         }
 
-        public OptionalDouble getAverage(){
-            if(remainingElements!=0){
-                return OptionalDouble.empty();
+        public void updateMaxExtreme(int extreme){
+            summedElements++;
+            remainingElements--;
+            this.currentExtreme += extreme;
+            this.currentMin = Math.min(extreme, this.currentMin);
+            this.currentMax = Math.max(extreme, this.currentMax);
+        }
+
+        public OptionalInt getAverage(){
+            if(remainingElements!=0 || !(Math.abs(currentExtreme/summedElements)==1)){
+                return OptionalInt.empty();
             }
-            return OptionalDouble.of(currentSum/(summedElements));
+            return OptionalInt.of(currentExtreme);
+        }
+
+        public int getCurrentMin() {
+            return currentMin;
+        }
+
+        public int getCurrentMax() {
+            return currentMax;
         }
     }
 
     public TreeNode(Set<Card> ourCards, Set<Card> theirCards) {
         this.ourCards = ourCards;
+        this.remainingCardsPerPlayer = ourCards.size();
         this.theirCards = theirCards;
-        this.score = new Score(0, 0);
+        this.score = new Score(0);
     }
 
     private TreeNode(TreeNode parent, Move ourMove, Move theirMove) {
+        if(ourMove.card().id().equals("C") && ourMove.valueType().equals(Card.ValueType.ATTACK)
+        && theirMove.card().id().equals("E") && theirMove.valueType().equals(Card.ValueType.DEFENSE)){
+            int ss = 33;
+        }
         this.ourCards = parent.ourCards.stream().filter(c -> !c.equals(ourMove.card())).collect(Collectors.toSet());
+        this.remainingCardsPerPlayer = ourCards.size();
         this.theirCards = parent.theirCards.stream().filter(c -> !c.equals(theirMove.card())).collect(Collectors.toSet());
         this.resultInThisNode = ourMove.compareTo(theirMove);
         this.wePlay = (resultInThisNode==0) ? parent.wePlay : (resultInThisNode == 1);
         this.score = parent.score.calculateNewScore(ourMove, theirMove);
+
+        this.parents.add(parent);
 
         this.ourMove = ourMove;
         this.theirMove = theirMove;
@@ -80,56 +127,95 @@ public class TreeNode {
         return theirMove;
     }
 
-    public int remainingCardsPerPlayer() {
-        return ourCards.size(); //can use theirCards.size also
+    public boolean isGameOver(Score score) {
+        return (Math.abs(score.diff()) > remainingCardsPerPlayer) || remainingCardsPerPlayer == 0;
     }
 
-    public boolean isGameOver() {
-        return (Math.abs(score.theirScore() - score.ourScore()) > remainingCardsPerPlayer()) || remainingCardsPerPlayer() == 0;
+    private void saveHistory(TreeNode child){
+        alreadyCalculatedPositions.putIfAbsent(new RemainingCards(child.ourCards, child.theirCards, child.wePlay, child.resultInThisNode, child.score.diff()), child);
     }
 
-    public double expand() {
-        if (this.isGameOver()) {
+    public int expand() {
+
+        if(ourMove!=null && ourMove.card().id().equals("MAC6") && ourMove.valueType().equals(Card.ValueType.ATTACK)
+                && theirMove.card().id().equals("PSG17") && theirMove.valueType().equals(Card.ValueType.DEFENSE)){
+            int ss = 33;
+        }
+
+        if (this.isGameOver(this.score)) {
             this.minmax = this.resultInThisNode;
+            saveHistory(this);
+            return this.minmax;
+        }
+
+        var remCards = new RemainingCards(this.ourCards, this.theirCards, this.wePlay, this.resultInThisNode, this.score.diff());
+        if(alreadyCalculatedPositions.containsKey(remCards)){
+            //we already had these remaining cards before
+
+            TreeNode foundNode = alreadyCalculatedPositions.get(remCards);  //for this node, the score will be wrong, since we attached incorrect children score
+            this.score = foundNode.score; //foundNode.score;
+
+            if(foundNode.children.isEmpty()){
+                System.out.println("EMPTY CHILDREN!!!!");
+            }
+
+            this.children.forEach(c -> c.parents.add(this));
+
+            this.minmax = foundNode.minmax;
+            this.children = foundNode.children;
+            if(this.children.isEmpty()){
+                System.out.println("33q242134");
+            }
+            this.childrenStatsByOurMove = foundNode.childrenStatsByOurMove;
+            this.childrenStatsByTheirMove = foundNode.childrenStatsByTheirMove;
             return this.minmax;
         }
 
         generateAllPossibleChildren();
 
         for(TreeNode child : this.children){
-            double averageResultFromChild = child.expand();
-            ChildrenStats stats = this.childrenStatsByOurMove.get(child.ourMove);
-            stats.updateSum(averageResultFromChild);
-            ChildrenStats stats2 = this.childrenStatsByTheirMove.get(child.theirMove);
-            stats2.updateSum(averageResultFromChild);
+            int averageResultFromChild = child.expand();
+
             if (this.wePlay) {
-                //try to check if new sum update actually can produce the average and if average is actually final one
-                if(stats.getAverage().isPresent() && stats.getAverage().getAsDouble()==1.0){
+                ChildrenStats stats = this.childrenStatsByOurMove.get(child.ourMove);
+                stats.updateMaxExtreme(averageResultFromChild);
+
+                if(stats.getAverage().isPresent() && stats.getAverage().getAsInt()==1){
                     //no more need to check other children
-                    this.minmax = 1.0;
-                    return 1.0;
+                    this.minmax = 1;
+                    saveHistory(child);
+                    return this.minmax;
                 }
             }
             else{
-                if(stats2.getAverage().isPresent() && stats2.getAverage().getAsDouble()==-1.0){
+                ChildrenStats stats2 = this.childrenStatsByTheirMove.get(child.theirMove);
+                stats2.updateMinExtreme(averageResultFromChild);
+
+                if(stats2.getAverage().isPresent() && stats2.getAverage().getAsInt()==-1){
                     //no more need to check other children
-                    this.minmax = -1.0;
-                    return -1.0;
+                    this.minmax = -1;
+                    saveHistory(child);
+                    return this.minmax;
                 }
             }
         }
 
         if (this.wePlay) {
-            this.minmax = this.childrenStatsByOurMove.values().stream().max(Comparator.comparingDouble(x -> x.getAverage().getAsDouble())).get().getAverage().getAsDouble();
+            this.minmax = this.childrenStatsByOurMove.values().stream().max(Comparator.comparingDouble(x -> x.getCurrentMax())).get().getCurrentMax();
+            saveHistory(this);
             return this.minmax;
         }
         else{
-            this.minmax = this.childrenStatsByTheirMove.values().stream().min(Comparator.comparingDouble(x -> x.getAverage().getAsDouble())).get().getAverage().getAsDouble();
+            this.minmax = this.childrenStatsByTheirMove.values().stream().min(Comparator.comparingDouble(x -> x.getCurrentMin())).get().getCurrentMin();
+            saveHistory(this);
             return this.minmax;
         }
     }
 
     private void generateAllPossibleChildren() {
+        if(!this.children.isEmpty()){
+            System.out.println("!!!!!!!!!!!!!!!1");
+        }
         this.children = new HashSet<>();
         for (Card ourCard : ourCards) {
             for (Card theirCard : theirCards) {
@@ -138,12 +224,17 @@ public class TreeNode {
                 }
             }
         }
-        this.childrenStatsByOurMove = this.children.stream().collect(
-                        Collectors.groupingBy(x -> x.ourMove,
-                                Collectors.collectingAndThen(Collectors.counting(), x -> new ChildrenStats(x.intValue()))));
-        this.childrenStatsByTheirMove = this.children.stream().collect(
-                Collectors.groupingBy(x -> x.theirMove,
-                        Collectors.collectingAndThen(Collectors.counting(), x -> new ChildrenStats(x.intValue()))));
+
+        if(wePlay) {
+            this.childrenStatsByOurMove = this.children.stream().collect(
+                    Collectors.groupingBy(x -> x.ourMove,
+                            Collectors.collectingAndThen(Collectors.counting(), x -> new ChildrenStats(x.intValue()))));
+        }
+        else {
+            this.childrenStatsByTheirMove = this.children.stream().collect(
+                    Collectors.groupingBy(x -> x.theirMove,
+                            Collectors.collectingAndThen(Collectors.counting(), x -> new ChildrenStats(x.intValue()))));
+        }
     }
 
     public Score getScore() {
