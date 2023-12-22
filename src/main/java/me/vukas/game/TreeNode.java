@@ -37,8 +37,8 @@ public class TreeNode {
 
     static class ChildrenStats{
         double currentExtreme;
-        double currentMin = 1;
-        double currentMax = -1;
+        double currentMin = Integer.MAX_VALUE;
+        double currentMax = Integer.MIN_VALUE;
         int summedElements;
         int remainingElements;
 
@@ -46,15 +46,7 @@ public class TreeNode {
             this.remainingElements = remainingElements;
         }
 
-        public void updateMinExtreme(double extreme){
-            summedElements++;
-            remainingElements--;
-            this.currentExtreme += extreme;
-            this.currentMin = Math.min(extreme, this.currentMin);
-            this.currentMax = Math.max(extreme, this.currentMax);
-        }
-
-        public void updateMaxExtreme(double extreme){
+        public void updateExtreme(double extreme){
             summedElements++;
             remainingElements--;
             this.currentExtreme += extreme;
@@ -63,10 +55,10 @@ public class TreeNode {
         }
 
         public OptionalDouble getAverage(){
-            if(remainingElements!=0 || !(Math.abs(currentExtreme/summedElements)==1)){
+            if(remainingElements!=0 /*|| !(Math.abs(currentExtreme/summedElements)==1)*/){
                 return OptionalDouble.empty();
             }
-            return OptionalDouble.of(currentExtreme);
+            return OptionalDouble.of(currentExtreme/summedElements);
         }
 
         public double getCurrentExtreme() {
@@ -74,11 +66,11 @@ public class TreeNode {
         }
 
         public double getCurrentMin() {
-            return (double)currentMin/summedElements;
+            return (double)currentMin/*/summedElements*/;
         }
 
         public double getCurrentMax() {
-            return (double)currentMax/summedElements;
+            return (double)currentMax/*/summedElements*/;
         }
     }
 
@@ -147,7 +139,7 @@ public class TreeNode {
         }
 
         if (this.isGameOver(this.score)) {
-            this.minmax = this.resultInThisNode;
+            this.minmax = Integer.compare(this.score.diff(), 0);
             saveHistory(this);
             return this.minmax;
         }
@@ -182,7 +174,7 @@ public class TreeNode {
 
             if (this.wePlay) {
                 ChildrenStats stats = this.childrenStatsByOurMove.get(child.ourMove);
-                stats.updateMaxExtreme(averageResultFromChild);
+                stats.updateExtreme(averageResultFromChild);
 
                 if(stats.getAverage().isPresent() && stats.getAverage().getAsDouble()==1.0){
                     //no more need to check other children
@@ -193,7 +185,7 @@ public class TreeNode {
             }
             else{
                 ChildrenStats stats2 = this.childrenStatsByTheirMove.get(child.theirMove);
-                stats2.updateMinExtreme(averageResultFromChild);
+                stats2.updateExtreme(averageResultFromChild);
 
                 if(stats2.getAverage().isPresent() && stats2.getAverage().getAsDouble()==-1.0){
                     //no more need to check other children
@@ -205,7 +197,7 @@ public class TreeNode {
         }
 
         if (this.wePlay) {
-            this.minmax = this.childrenStatsByOurMove.values().stream().max(Comparator.comparingDouble(x -> x.getCurrentMax())).get().getCurrentMax();
+            this.minmax = this.childrenStatsByOurMove.values().stream().max(Comparator.comparingDouble(x -> x.getCurrentMin())).get().getCurrentMin();
             saveHistory(this);
             return this.minmax;
         }

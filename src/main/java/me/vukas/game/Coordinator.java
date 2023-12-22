@@ -21,12 +21,14 @@ public class Coordinator {
             var movesMap = rootNode.getChildren().stream()
                     .filter(x -> x.getTheirMove().card().cardType() == theirMove.cardType() && x.getTheirMove().valueType() == theirMove.valueType())
                     .collect(
-                            Collectors.groupingBy(TreeNode::getOurMove, Collectors.averagingDouble(TreeNode::getMinMax)));
+                            Collectors.groupingBy(TreeNode::getOurMove, Collectors.minBy(Comparator.comparingDouble(TreeNode::getMinMax))))
+                    .entrySet().stream().collect(Collectors.toMap(x -> x.getKey(), y->y.getValue().get().getMinMax()));
             return Collections.max(movesMap.entrySet(), Map.Entry.comparingByValue()).getKey();
         }
         else{
             var movesMap = rootNode.getChildren().stream().collect(
-                    Collectors.groupingBy(TreeNode::getOurMove, Collectors.averagingDouble(TreeNode::getMinMax)));
+                    Collectors.groupingBy(TreeNode::getOurMove, Collectors.minBy(Comparator.comparingDouble(TreeNode::getMinMax))))
+                    .entrySet().stream().collect(Collectors.toMap(x -> x.getKey(), y->y.getValue().get().getMinMax()));
             return Collections.max(movesMap.entrySet(), Map.Entry.comparingByValue()).getKey();
         }
     }
